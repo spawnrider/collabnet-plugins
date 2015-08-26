@@ -39,7 +39,6 @@ import java.util.List;
  * @goal deploy-to-releases
  * @phase deploy
  */
-@SuppressWarnings("UnusedDeclaration")
 public class FrsDeployMojo
         extends AbstractMojo {
 
@@ -142,6 +141,13 @@ public class FrsDeployMojo
      * @parameter
      */
     private Boolean overwrite;
+    
+    /**
+     * If provided, retrieve artifacts from this path.
+     *
+     * @parameter
+     */
+    private String directory;
 
     // ----------------
     // Maven components
@@ -195,15 +201,19 @@ public class FrsDeployMojo
                 packageId = findPackage(frsSession);
                 releaseId = findRelease(frsSession, packageId);
             }
-
-            uploadArtifacts(artifacts, releaseId, frsSession);
+            
+            if(directory != null) {
+            	uploadFileFromDirectory(directory, releaseId, frsSession);
+            } else {
+            	uploadArtifacts(artifacts, releaseId, frsSession);
+            }
         } catch (RemoteException e) {
             throw new MojoExecutionException(e.getLocalizedMessage(), e);
         } finally {
             logoff(session);
         }
     }
-
+    
     private com.maestrodev.plugins.collabnet.frs.Package createPackageTemplate() {
         Package template = new Package();
         template.setTitle(pkg);
@@ -259,6 +269,22 @@ public class FrsDeployMojo
             getLog().error("Error logging off from CollabNet TeamForge (ignoring): " + e.getLocalizedMessage(), e);
         }
     }
+    
+    private void uploadFileFromDirectory(String directory, String releaseId, FrsSession frsSession) throws MojoExecutionException {
+    	File folder = new File(directory);
+    	File[] listOfFiles = folder.listFiles();
+    	
+    	for (File file : listOfFiles) {
+            getLog().info("Uploading '" + file + "' to release '" + releaseId + "'");
+            try {
+                frsSession.uploadFile(releaseId, file, overwrite);
+            } catch (RemoteException e) {
+                throw new MojoExecutionException("Unable to upload file: " + e.getLocalizedMessage(), e);
+            } catch (MalformedURLException e) {
+                throw new MojoExecutionException("Error trying to convert artifact to an URL: " + e.getLocalizedMessage(), e);
+            }
+        }
+    }
 
     private void uploadArtifacts(List<Artifact> artifacts, String releaseId, FrsSession frsSession) throws MojoExecutionException {
         for (Artifact artifact : artifacts) {
@@ -296,6 +322,10 @@ public class FrsDeployMojo
         }
         if (teamForgePassword == null) {
             throw new MojoFailureException("TeamForge password must be specified");
+        }
+        
+        if(directory != null) {
+        	getLog().debug("Using directory: " + directory);
         }
 
         boolean snapshot = ArtifactUtils.isSnapshot(projectArtifact.getVersion());

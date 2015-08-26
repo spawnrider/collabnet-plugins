@@ -19,7 +19,7 @@
   <parent>
     <artifactId>collabnet-plugins</artifactId>
     <groupId>com.maestrodev</groupId>
-    <version>1.7-SNAPSHOT</version>
+    <version>1.8</version>
   </parent>
 
   <artifactId>collabnet-maestro-plugin</artifactId>
@@ -37,6 +37,7 @@
     <connection>scm:git:ssh://git@github.com/maestrodev/collabnet-plugins.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/maestrodev/collabnet-plugins.git</developerConnection>
     <url>https://github.com/maestrodev/collabnet-plugins</url>
+    <tag>collabnet-plugins-1.8</tag>
   </scm>
 
   <repositories>
